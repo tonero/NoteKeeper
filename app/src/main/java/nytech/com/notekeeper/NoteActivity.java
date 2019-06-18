@@ -1,6 +1,7 @@
 package nytech.com.notekeeper;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -20,6 +21,9 @@ public class NoteActivity extends AppCompatActivity
     private NoteInfo mNote;
     private List<CourseInfo> lsCourses = DataManager.getInstance().getCourses();
     private boolean mIsNewNote;
+    private Spinner mSpCourses;
+    private EditText mEtNoteTitle;
+    private EditText mEtNoteText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -29,19 +33,19 @@ public class NoteActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        Spinner spCourses = findViewById(R.id.sp_courses);
-        EditText etNoteTitle = findViewById(R.id.et_note_title);
-        EditText etNoteText = findViewById(R.id.et_note_text);
+        mSpCourses = findViewById(R.id.sp_courses);
+        mEtNoteTitle = findViewById(R.id.et_note_title);
+        mEtNoteText = findViewById(R.id.et_note_text);
 
 
         ArrayAdapter<CourseInfo> adapterCourses =
                 new ArrayAdapter<>(this,android.R.layout.simple_spinner_item,lsCourses);
         adapterCourses.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spCourses.setAdapter(adapterCourses);
+        mSpCourses.setAdapter(adapterCourses);
 
         readDisplayState();
         if(!mIsNewNote)
-            populateViews(spCourses,etNoteTitle,etNoteText);
+            populateViews(mSpCourses, mEtNoteTitle, mEtNoteText);
     }
 
     private void populateViews(Spinner spCourses, EditText etNoteTitle, EditText etNoteText)
@@ -66,7 +70,7 @@ public class NoteActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         //Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.menu_note, menu);
         return true;
     }
 
@@ -79,11 +83,34 @@ public class NoteActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings)
+        if (id == R.id.action_send_email)
         {
+            sendEmail();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void sendEmail()
+    {
+       String noteTitle = mEtNoteTitle.getText().toString();
+       String email ="contact@nytech.team";
+
+       String emailBody = "Check out what I learned in the pluralsight course \""
+               +mSpCourses.getSelectedItem().toString()+"\"\n"
+               +mEtNoteText.getText().toString();
+
+       Intent intent = new Intent(Intent.ACTION_SENDTO);
+       intent.setType("message/rfs2822");
+        /**
+         * Use this if you want to send to a specific email
+         */
+       // intent.setData(Uri.parse("mailto:"));
+       intent.putExtra(Intent.EXTRA_EMAIL, new String[] {email});
+       intent.putExtra(Intent.EXTRA_SUBJECT,noteTitle);
+       intent.putExtra(Intent.EXTRA_TEXT,emailBody);
+       startActivity(intent);
+
     }
 }
