@@ -36,14 +36,20 @@ public class NoteListActivity extends AppCompatActivity
         initializeDisplayContents();
     }
 
+    @Override
+    protected void onRestart()
+    {
+        super.onRestart();
+
+    }
+
     private void initializeDisplayContents()
     {
         final ListView lvNotes = findViewById(R.id.lv_notes);
         List<NoteInfo> lsNoteInfo = DataManager.getInstance().getNotes();
 
-        ArrayAdapter<NoteInfo> adapterNotes =
-                new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,lsNoteInfo);
-        lvNotes.setAdapter(adapterNotes);
+        ArrayAdapter<NoteInfo> mAdapterNotes = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,lsNoteInfo);
+        lvNotes.setAdapter(mAdapterNotes);
 
         lvNotes.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {

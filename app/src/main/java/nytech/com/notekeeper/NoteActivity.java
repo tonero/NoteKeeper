@@ -1,8 +1,8 @@
 package nytech.com.notekeeper;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -24,6 +24,9 @@ public class NoteActivity extends AppCompatActivity
     private Spinner mSpCourses;
     private EditText mEtNoteTitle;
     private EditText mEtNoteText;
+    private boolean mIsCancelling;
+    private int mNotePosition;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -62,8 +65,48 @@ public class NoteActivity extends AppCompatActivity
         int position = intent.getIntExtra(NOTE_POSITION, POSITION_NOT_SET);
         mIsNewNote = position == POSITION_NOT_SET;
 
-        if(!mIsNewNote)
+        if(mIsNewNote)
+        {
+            createNewNote();
+
+        }else
+        {
             mNote = DataManager.getInstance().getNotes().get(position);
+        }
+
+    }
+
+    private void createNewNote()
+    {
+        DataManager dm = DataManager.getInstance();
+        mNotePosition = dm.createNewNote();
+        mNote = dm.getNotes().get(mNotePosition);
+
+    }
+
+
+    private void saveEditedNote()
+    {
+        mNote.setCourse((CourseInfo)mSpCourses.getSelectedItem());
+        mNote.setTitle(mEtNoteTitle.getText().toString());
+        mNote.setText(mEtNoteText.getText().toString());
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        if(mIsCancelling)
+        {
+             if(mIsNewNote || mNote == null)
+             {
+                 DataManager.getInstance().removeNote(mNotePosition);
+             }
+        }else
+        {
+            saveEditedNote();
+        }
+
     }
 
     @Override
@@ -87,30 +130,45 @@ public class NoteActivity extends AppCompatActivity
         {
             sendEmail();
             return true;
+        }else if(id == R.id.action_cancel)
+        {
+            cancelNoteSave();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void cancelNoteSave()
+    {
+        mIsCancelling = true;
+        finish();
+    }
+
+    /**
+     * Use this if you want to send to a specific email
+     *        String email ="contact@nytech.team";
+     *        intent.setData(Uri.parse("mailto:"));
+     *        intent.putExtra(Intent.EXTRA_EMAIL, new String[] {email});
+     *        Intent intent = new Intent(Intent.ACTION_SENDTO);
+     */
     private void sendEmail()
     {
        String noteTitle = mEtNoteTitle.getText().toString();
-       String email ="contact@nytech.team";
+       CourseInfo courseTitle = (CourseInfo) mSpCourses.getSelectedItem();
 
        String emailBody = "Check out what I learned in the pluralsight course \""
-               +mSpCourses.getSelectedItem().toString()+"\"\n"
+               +courseTitle.getTitle()+"\"\n"
                +mEtNoteText.getText().toString();
 
-       Intent intent = new Intent(Intent.ACTION_SENDTO);
-       intent.setType("message/rfs2822");
-        /**
-         * Use this if you want to send to a specific email
-         */
-       // intent.setData(Uri.parse("mailto:"));
-       intent.putExtra(Intent.EXTRA_EMAIL, new String[] {email});
+       Intent intent = new Intent(Intent.ACTION_SEND);
+       intent.setType("message/rfc2822");
+
+
        intent.putExtra(Intent.EXTRA_SUBJECT,noteTitle);
        intent.putExtra(Intent.EXTRA_TEXT,emailBody);
        startActivity(intent);
 
     }
+
 }
