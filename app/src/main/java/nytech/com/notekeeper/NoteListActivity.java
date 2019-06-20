@@ -60,7 +60,6 @@ public class NoteListActivity extends AppCompatActivity
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id)
             {
                 Intent intent = new Intent(NoteListActivity.this,NoteActivity.class);
-                //NoteInfo note = (NoteInfo) lvNotes.getItemAtPosition(i);
                 intent.putExtra(NoteActivity.NOTE_POSITION,position);
                 startActivity(intent);
             }
